@@ -1,0 +1,7 @@
+*__pycache__/
+weights/
+*.bkp
+*.ipynb
+*.ipynb_checkpoints/
+*.pyc
+*.DS_Store
