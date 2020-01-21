@@ -38,7 +38,7 @@ class KineticsDownloader:
         self.fail_file = cfg.fail_file
         self.ann = pd.read_csv(self.anfile)
         self.lbl2dir = self.build_vidir()
-        self.num_vids = self.ann.shape[0]
+        self.num_videos = self.ann.shape[0]
 
     def build_vidir(self):
         """Create a directory for each name in the data"""
@@ -57,7 +57,7 @@ class KineticsDownloader:
     def get_vidname(self, videoid, stt_time, end_time, label):
         basename = '%s-%s-%s.mp4' % (videoid, self.trim_fmt % stt_time,
                                      self.trim_fmt % end_time)
-        dirname = self.label2dir[label]
+        dirname = self.lbl2dir[label]
         videoname = osp.join(self.oridir, basename)
         clipname = osp.join(dirname, basename)
         return videoname, clipname
@@ -65,15 +65,16 @@ class KineticsDownloader:
     def download_video(self, vidname, videoid):
         status = False
         url = self.baseurl + videoid
-        cmd = ['youtube-dl', '--quiet', '--no-warnings', '-f', 'mp4',
-               '-o', '"%s"'%vidname, '"%s"'%url]
+        cmd = ['youtube-dl',
+                # '--quiet', '--no-warnings',
+                '-f', 'mp4', '-o', '"%s"'%vidname, '"%s"'%url]
         cmd = ' '.join(cmd)
         attempts = 0
         while True:
             try:
                 output = sp.check_output(cmd, shell=True, stderr=sp.STDOUT)
             except sp.CalledProcessError as err:
-                attempt += 1
+                attempts += 1
                 if attempts == self.att_time:
                     return status, err.output
             else:
@@ -100,19 +101,21 @@ class KineticsDownloader:
         pass
 
     def build_dataset(self):
+        print(f'There are {self.num_videos} videos in the dataset')
         fails = pd.DataFrame()
         for i, row in self.ann.iterrows():
-            print(f'Downloading the {i}/{self.num_videos} video', end=' ')
+            print(f'=====Downloading the {i}/{self.num_videos} video', end=' ')
             videoid, label = row['youtube_id'], row['label']
             stt_time, end_time = row['time_start'], row['time_end']
             vidname, clpname = self.get_vidname(videoid, stt_time, end_time, label)
-            print(f'its name is {vidname}')
+            print(f'its name is {vidname}', end=' ')
             dstat = self.download_video(videoid, vidname)
+            print(f'Clipping the video, its name is {clpname}', end=' ')
             cstat = self.clip_video(vidname, clpname)
             if dstat and cstat:
-                print('Success!')
+                print('Success!=====')
             else:
-                print('Failed')
+                print('Failed!=====')
                 fails.append(())
         if len(fails) > 0:
            self.save_fails(fails)
@@ -122,6 +125,4 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
     kdl = KineticsDownloader(args)
-    print(kdl.ann)
-    print(kdl.num_videos)
-    print(kdl.num_feats)
+    kdl.build_dataset()
