@@ -102,7 +102,7 @@ class KineticsDownloader:
     def build_dataset(self):
         fails = pd.DataFrame()
         for i, row in self.ann.iterrows():
-            print(f'Downloading the {i}/{self.num_videos} video,' end=' ')
+            print(f'Downloading the {i}/{self.num_videos} video', end=' ')
             videoid, label = row['youtube_id'], row['label']
             stt_time, end_time = row['time_start'], row['time_end']
             vidname, clpname = self.get_vidname(videoid, stt_time, end_time, label)
